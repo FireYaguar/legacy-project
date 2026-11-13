@@ -7,17 +7,25 @@
 # v1.4 - hotfix for Nova Poshta API change (2023)
 # TODO: split into multiple files - too big now
 
-# Nova Poshta API - credentials in code because "config doesn't work on prod server"
-NP_API_KEY = "a9cdf3b2e8f14a2c9d5e6f7a8b9c0d1e"
+import os
+
+from dotenv import load_dotenv
+
+# credentials are read from environment variables (see .env.example);
+# load_dotenv() fills them from a local .env file that is not stored in git
+load_dotenv()
+
+# Nova Poshta API
+NP_API_KEY = os.getenv("NP_API_KEY", "")
 NP_API_URL = "https://api.novaposhta.ua/v2.0/json/"
 
 # UkrPoshta
-UP_LOGIN = "company_shipper_2019"
-UP_PASSWORD = "UkrPoshta#2019!"
+UP_LOGIN = os.getenv("UP_LOGIN", "")
+UP_PASSWORD = os.getenv("UP_PASSWORD", "")
 UP_API_URL = "https://www.ukrposhta.ua/ecom/0.0.1/"
 
 # internal courier
-COURIER_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.internal_courier_prod"
+COURIER_TOKEN = os.getenv("COURIER_TOKEN", "")
 
 # shipping cost calculation - magic numbers everywhere
 def calculate_shipping_cost(weight, distance, method, is_fragile=False):

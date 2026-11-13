@@ -22,6 +22,8 @@ Types: 1, 2, 3, 4
 
 Edit config/settings.py (see settings.example.py)
 
+Carrier credentials: copy `.env.example` to `.env` and fill in the values (`.env` is ignored by git).
+
 ## Notes
 
 - Do not run type 3 on Fridays (known issue)
@@ -51,4 +53,5 @@ Sales analytics dashboard and metrics.
 
 ### shipping.py
 Multi-carrier shipping integration.
-**Known issues:** API credentials hardcoded, delivery cost calculation duplicated, no tests.
+**Known issues:** delivery cost calculation duplicated.
+**Fixed:** API credentials moved to environment variables (.env, see .env.example, CR-shipping-001); tests in tests/test_shipping_fix.py.
