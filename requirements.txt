@@ -7,3 +7,5 @@
 pytest>=7.0
 pylint>=2.0
 radon>=5.0
+# secrets from .env
+python-dotenv>=1.0
