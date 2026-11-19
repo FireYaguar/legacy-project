@@ -96,3 +96,18 @@ def test_bulk_notify_counts_failed(monkeypatch):
 
 def test_log_notification_returns_none():
     assert notify.log_notification(1, "order", "sent") is None
+
+
+# --- MessageType (ітерація 2) -------------------------------------------
+
+def test_message_type_values_match_old_numbers():
+    assert notify.MessageType.ORDER_CONFIRMED == 1
+    assert notify.MessageType.PAYMENT_RECEIVED == 2
+    assert notify.MessageType.ORDER_CANCELLED == 3
+
+
+def test_notify_accepts_enum_members(sent):
+    notify.notify_user(1, notify.MessageType.PAYMENT_RECEIVED,
+                       {"email": "a@b.c", "amount": 10})
+    assert sent == [("a@b.c", "Payment Received",
+                     "Payment of 10 UAH received.")]

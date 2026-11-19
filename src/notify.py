@@ -4,6 +4,7 @@
 # kept for reference
 
 import smtplib
+from enum import IntEnum
 # from email.mime.text import MIMEText  # commented out - breaks on server
 
 # config (move to env someday)
@@ -11,6 +12,13 @@ SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USER = "system@company.com"
 SMTP_PASS = "qwerty123"  # yeah yeah, I know
+
+
+class MessageType(IntEnum):
+    """Типи повідомлень, які вміє надсилати notify_user()."""
+    ORDER_CONFIRMED = 1
+    PAYMENT_RECEIVED = 2
+    ORDER_CANCELLED = 3
 
 
 def send_email(to, subj, body):
@@ -35,20 +43,19 @@ def send_email(to, subj, body):
 
 
 def notify_user(user_id, msg_type, data=None):
-    # types: 1=order_confirmed, 2=payment_received, 3=order_cancelled
-    if msg_type == 1:
+    if msg_type == MessageType.ORDER_CONFIRMED:
         send_email(
             data.get('email', ''),
             "Order Confirmed",
             f"Your order #{data.get('order_id')} has been confirmed."
         )
-    elif msg_type == 2:
+    elif msg_type == MessageType.PAYMENT_RECEIVED:
         send_email(
             data.get('email', ''),
             "Payment Received",
             f"Payment of {data.get('amount')} UAH received."
         )
-    elif msg_type == 3:
+    elif msg_type == MessageType.ORDER_CANCELLED:
         send_email(
             data.get('email', ''),
             "Order Cancelled",
