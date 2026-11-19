@@ -111,3 +111,26 @@ def test_notify_accepts_enum_members(sent):
                        {"email": "a@b.c", "amount": 10})
     assert sent == [("a@b.c", "Payment Received",
                      "Payment of 10 UAH received.")]
+
+
+# --- MESSAGE_TEMPLATES і build_message (ітерація 3) ----------------------
+
+def test_every_message_type_has_a_template():
+    assert set(notify.MESSAGE_TEMPLATES) == set(notify.MessageType)
+
+
+def test_build_message_known_type():
+    assert notify.build_message(1, {"order_id": 9}) == (
+        "Order Confirmed", "Your order #9 has been confirmed.")
+
+
+def test_build_message_unknown_type_returns_none():
+    assert notify.build_message(99, {}) is None
+    assert notify.build_message(99, None) is None
+
+
+def test_new_message_type_needs_only_a_template(sent, monkeypatch):
+    monkeypatch.setitem(notify.MESSAGE_TEMPLATES, 10,
+                        ("Shipped", "Order #{order_id} shipped."))
+    notify.notify_user(1, 10, {"email": "a@b.c", "order_id": 3})
+    assert sent == [("a@b.c", "Shipped", "Order #3 shipped.")]

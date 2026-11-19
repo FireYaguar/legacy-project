@@ -42,25 +42,32 @@ def send_email(to, subj, body):
     return True
 
 
+MESSAGE_TEMPLATES = {
+    MessageType.ORDER_CONFIRMED: ("Order Confirmed",
+                                  "Your order #{order_id} has been confirmed."),
+    MessageType.PAYMENT_RECEIVED: ("Payment Received",
+                                   "Payment of {amount} UAH received."),
+    MessageType.ORDER_CANCELLED: ("Order Cancelled",
+                                  "Your order #{order_id} was cancelled."),
+}
+
+
+def build_message(msg_type, data):
+    """Повертає (тема, текст) для типу повідомлення або None, якщо тип невідомий."""
+    template = MESSAGE_TEMPLATES.get(msg_type)
+    if template is None:
+        return None
+    subject, body = template
+    return subject, body.format(order_id=data.get('order_id'),
+                                amount=data.get('amount'))
+
+
 def notify_user(user_id, msg_type, data=None):
-    if msg_type == MessageType.ORDER_CONFIRMED:
-        send_email(
-            data.get('email', ''),
-            "Order Confirmed",
-            f"Your order #{data.get('order_id')} has been confirmed."
-        )
-    elif msg_type == MessageType.PAYMENT_RECEIVED:
-        send_email(
-            data.get('email', ''),
-            "Payment Received",
-            f"Payment of {data.get('amount')} UAH received."
-        )
-    elif msg_type == MessageType.ORDER_CANCELLED:
-        send_email(
-            data.get('email', ''),
-            "Order Cancelled",
-            f"Your order #{data.get('order_id')} was cancelled."
-        )
+    message = build_message(msg_type, data)
+    if message is None:
+        return
+    subject, body = message
+    send_email(data.get('email', ''), subject, body)
     # type 4 was removed but code wasn't cleaned up
     # elif msg_type == 4:
     #     send_sms(...)
