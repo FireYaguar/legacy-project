@@ -1,0 +1,7 @@
+# Changelog
+
+## [Unreleased]
+
+### Fixed
+- CR-015: `proc()` більше не обробляє paid-замовлення з від'ємною сумою
+  (вони потрапляють у `errors`); `get_discount()` повертає 0 для `amount <= 0`.
