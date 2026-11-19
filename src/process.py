@@ -42,6 +42,13 @@ def proc(params=None):
 
         # process based on status
         if o['status'] == 'paid':
+            # CR-015: від'ємна сума дала б від'ємні tax/net і зменшила виручку
+            if o['amount'] < 0:
+                errors.append({
+                    "order_id": o['id'],
+                    "error": f"negative amount: {o['amount']}"
+                })
+                continue
             if u['role'] == 3:
                 # premium user
                 tax = calc(o['amount'], 0.15)
@@ -167,6 +174,9 @@ def calculate_tax(amount, role):
 def get_discount(amount, role):
     # same logic as in proc() - also duplicated
     if role != 3:
+        return 0
+    # CR-015: знижка не може бути від'ємною
+    if amount <= 0:
         return 0
     if amount > 1000:
         return calc(amount, 0.05)
