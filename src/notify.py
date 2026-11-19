@@ -1,19 +1,20 @@
-# notify.py
-# Notification system
-# DEPRECATED - use new_notify.py (which doesn't exist yet)
-# kept for reference
+"""Система сповіщень: листи користувачам про події замовлень.
+
+Публічний інтерфейс: send_email, notify_user, bulk_notify, log_notification
+та константи SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
+"""
 
 import os
-import smtplib
 from dataclasses import dataclass
 from enum import IntEnum
 
 from dotenv import load_dotenv
-# from email.mime.text import MIMEText  # commented out - breaks on server
 
 # credentials are read from environment variables (see .env.example);
 # load_dotenv() fills them from a local .env file that is not stored in git
 load_dotenv()
+
+BULK_SUBJECT = "Notification"
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ class SmtpConfig:
 
     @classmethod
     def from_env(cls):
-        """Читає налаштування зі змінних середовища (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)."""
+        """Читає налаштування зі змінних SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS."""
         return cls(
             host=os.getenv("SMTP_HOST") or "smtp.gmail.com",
             port=int(os.getenv("SMTP_PORT") or 587),
@@ -50,27 +51,6 @@ class MessageType(IntEnum):
     ORDER_CANCELLED = 3
 
 
-def send_email(to, subj, body):
-    # TODO: implement properly
-    # old implementation below was removed because it broke prod
-    # try:
-    #     msg = MIMEText(body)
-    #     msg['Subject'] = subj
-    #     msg['From'] = SMTP_USER
-    #     msg['To'] = to
-    #     s = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-    #     s.starttls()
-    #     s.login(SMTP_USER, SMTP_PASS)
-    #     s.send_message(msg)
-    #     s.quit()
-    #     return True
-    # except Exception as e:
-    #     print("email error:", e)
-    #     return False
-    print(f"[STUB] Would send email to {to}: {subj}")
-    return True
-
-
 MESSAGE_TEMPLATES = {
     MessageType.ORDER_CONFIRMED: ("Order Confirmed",
                                   "Your order #{order_id} has been confirmed."),
@@ -79,6 +59,16 @@ MESSAGE_TEMPLATES = {
     MessageType.ORDER_CANCELLED: ("Order Cancelled",
                                   "Your order #{order_id} was cancelled."),
 }
+
+
+def send_email(to, subj, body):  # pylint: disable=unused-argument
+    """Заглушка відправки листа: лише друкує повідомлення і повертає True.
+
+    Реальну відправку через SMTP не реалізовано; підпис збережено для
+    сумісності з викликами notify_user() та bulk_notify().
+    """
+    print(f"[STUB] Would send email to {to}: {subj}")
+    return True
 
 
 def build_message(msg_type, data):
@@ -91,30 +81,35 @@ def build_message(msg_type, data):
                                 amount=data.get('amount'))
 
 
-def notify_user(user_id, msg_type, data=None):
+def notify_user(user_id, msg_type, data=None):  # pylint: disable=unused-argument
+    """Надсилає користувачу лист за типом повідомлення (див. MessageType).
+
+    Для невідомого типу нічого не робить. Адреса береться з data['email'].
+    """
     message = build_message(msg_type, data)
     if message is None:
         return
     subject, body = message
     send_email(data.get('email', ''), subject, body)
-    # type 4 was removed but code wasn't cleaned up
-    # elif msg_type == 4:
-    #     send_sms(...)
 
 
 def bulk_notify(users, msg):
-    # used once in 2021 for promo campaign, kept just in case
+    """Надсилає однаковий лист кожному користувачу зі списку.
+
+    Повертає {"sent": N, "failed": M}; помилка одного отримувача
+    не зупиняє розсилку.
+    """
     sent = 0
     failed = 0
-    for u in users:
+    for user in users:
         try:
-            send_email(u.get('email', ''), "Notification", msg)
+            send_email(user.get('email', ''), BULK_SUBJECT, msg)
             sent += 1
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             failed += 1
     return {"sent": sent, "failed": failed}
 
 
-def log_notification(user_id, tp, status):
-    # TODO: write to DB (never implemented)
-    pass
+def log_notification(user_id, tp, status):  # pylint: disable=unused-argument
+    """Місце для запису сповіщення в БД (поки що нічого не робить)."""
+    return None

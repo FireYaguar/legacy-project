@@ -182,3 +182,28 @@ def test_env_example_lists_smtp_variables_without_values():
         lines = [line.strip() for line in f]
     assert "SMTP_USER=" in lines
     assert "SMTP_PASS=" in lines
+
+
+# --- Чистота коду і docstring (ітерація 5) --------------------------------
+
+PUBLIC_API = [notify.send_email, notify.build_message, notify.notify_user,
+              notify.bulk_notify, notify.log_notification,
+              notify.SmtpConfig, notify.SmtpConfig.from_env,
+              notify.MessageType]
+
+
+@pytest.mark.parametrize("obj", PUBLIC_API, ids=lambda o: o.__name__)
+def test_public_objects_have_docstrings(obj):
+    assert obj.__doc__ and obj.__doc__.strip()
+
+
+def test_module_has_docstring():
+    assert notify.__doc__ and notify.__doc__.strip()
+
+
+def test_no_commented_out_code_left():
+    with open(notify.__file__, encoding="utf-8") as f:
+        source = f.read()
+    assert "# s = smtplib" not in source
+    assert "# elif msg_type" not in source
+    assert "import smtplib" not in source
