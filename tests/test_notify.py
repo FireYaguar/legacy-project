@@ -134,3 +134,51 @@ def test_new_message_type_needs_only_a_template(sent, monkeypatch):
                         ("Shipped", "Order #{order_id} shipped."))
     notify.notify_user(1, 10, {"email": "a@b.c", "order_id": 3})
     assert sent == [("a@b.c", "Shipped", "Order #3 shipped.")]
+
+
+# --- SmtpConfig: облікові дані з середовища (ітерація 4) ------------------
+
+def test_smtp_config_reads_environment(monkeypatch):
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.org")
+    monkeypatch.setenv("SMTP_PORT", "2525")
+    monkeypatch.setenv("SMTP_USER", "robot@example.org")
+    monkeypatch.setenv("SMTP_PASS", "s3cret")
+    cfg = notify.SmtpConfig.from_env()
+    assert (cfg.host, cfg.port, cfg.user, cfg.password) == (
+        "smtp.example.org", 2525, "robot@example.org", "s3cret")
+
+
+def test_smtp_config_defaults_without_environment(monkeypatch):
+    for name in ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"):
+        monkeypatch.delenv(name, raising=False)
+    cfg = notify.SmtpConfig.from_env()
+    assert (cfg.host, cfg.port) == ("smtp.gmail.com", 587)
+    assert cfg.user == "" and cfg.password == ""
+
+
+def test_smtp_config_empty_values_fall_back_to_defaults(monkeypatch):
+    monkeypatch.setenv("SMTP_HOST", "")
+    monkeypatch.setenv("SMTP_PORT", "")
+    cfg = notify.SmtpConfig.from_env()
+    assert (cfg.host, cfg.port) == ("smtp.gmail.com", 587)
+
+
+def test_smtp_constants_kept_for_compatibility():
+    for name in ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"):
+        assert hasattr(notify, name)
+
+
+def test_no_hardcoded_password_in_source():
+    with open(notify.__file__, encoding="utf-8") as f:
+        source = f.read()
+    assert "qwerty123" not in source
+    assert "system@company.com" not in source
+
+
+def test_env_example_lists_smtp_variables_without_values():
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(root, ".env.example"), encoding="utf-8") as f:
+        lines = [line.strip() for line in f]
+    assert "SMTP_USER=" in lines
+    assert "SMTP_PASS=" in lines

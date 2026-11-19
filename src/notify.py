@@ -3,15 +3,44 @@
 # DEPRECATED - use new_notify.py (which doesn't exist yet)
 # kept for reference
 
+import os
 import smtplib
+from dataclasses import dataclass
 from enum import IntEnum
+
+from dotenv import load_dotenv
 # from email.mime.text import MIMEText  # commented out - breaks on server
 
-# config (move to env someday)
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "system@company.com"
-SMTP_PASS = "qwerty123"  # yeah yeah, I know
+# credentials are read from environment variables (see .env.example);
+# load_dotenv() fills them from a local .env file that is not stored in git
+load_dotenv()
+
+
+@dataclass(frozen=True)
+class SmtpConfig:
+    """Налаштування SMTP-сервера."""
+    host: str
+    port: int
+    user: str
+    password: str
+
+    @classmethod
+    def from_env(cls):
+        """Читає налаштування зі змінних середовища (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)."""
+        return cls(
+            host=os.getenv("SMTP_HOST") or "smtp.gmail.com",
+            port=int(os.getenv("SMTP_PORT") or 587),
+            user=os.getenv("SMTP_USER", ""),
+            password=os.getenv("SMTP_PASS", ""),
+        )
+
+
+SMTP_CONFIG = SmtpConfig.from_env()
+# module-level names are kept for backward compatibility
+SMTP_HOST = SMTP_CONFIG.host
+SMTP_PORT = SMTP_CONFIG.port
+SMTP_USER = SMTP_CONFIG.user
+SMTP_PASS = SMTP_CONFIG.password
 
 
 class MessageType(IntEnum):

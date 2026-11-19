@@ -151,5 +151,5 @@ def test_env_example_lists_variables_without_values():
     with open(os.path.join(ROOT, ".env.example"), encoding="utf-8") as f:
         pairs = [line.strip().split("=", 1) for line in f
                  if re.match(r"^[A-Z_]+=", line.strip())]
-    assert sorted(name for name, _ in pairs) == sorted(ENV_NAMES)
+    assert set(ENV_NAMES) <= {name for name, _ in pairs}
     assert all(value == "" for _, value in pairs)
